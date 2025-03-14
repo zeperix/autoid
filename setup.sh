@@ -121,7 +121,7 @@ After=network.target
 Type=simple
 User=$(whoami)
 WorkingDirectory=${CURRENT_DIR}
-ExecStart=/usr/bin/python3 ${CURRENT_DIR}/api.py -api_url ${api_url} -api_key ${api_key} -lang=${language} ${auto_update_flag} -sync_time ${sync_time}
+ExecStart=python3 ${CURRENT_DIR}/api.py -api_url ${api_url} -api_key ${api_key} -lang=${language} ${auto_update_flag} -sync_time ${sync_time}
 Restart=always
 RestartSec=5
 
