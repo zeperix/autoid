@@ -109,10 +109,7 @@ After=network.target
 
 [Service]
 Type=simple
-Environment="api_url={self.api.url}"
-Environment="api_key={self.api.key}"
-Environment="taskid={id}"
-Environment="lang={language}"
+WorkingDirectory={CURRENT_DIR}
 ExecStart=/usr/bin/python3 {CURRENT_DIR}/main.py -api_url={self.api.url} -api_key={self.api.key} -taskid={id} -lang={language}
 Restart=on-failure
 RestartSec=5s
