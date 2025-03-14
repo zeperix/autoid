@@ -93,6 +93,7 @@ else
 fi
 
 wget -O /usr/local/bin/autoid https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/autoid
+chmod +x /usr/local/bin/autoid
 mkdir auto
 cd auto
 wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/main.py
