@@ -1,0 +1,283 @@
+#!/bin/bash
+
+# Màu sắc cho output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Prefix cho các service
+PREFIX="apple-auto_"
+MAIN_SERVICE="appleauto.service"
+
+# Tìm thư mục cài đặt từ service file
+get_install_dir() {
+    if [ -f "/etc/systemd/system/$MAIN_SERVICE" ]; then
+        # Trích xuất WorkingDirectory từ file service
+        INSTALL_DIR=$(grep "WorkingDirectory" "/etc/systemd/system/$MAIN_SERVICE" | cut -d'=' -f2)
+        echo "$INSTALL_DIR"
+    else
+        echo ""
+    fi
+}
+
+# Hiển thị banner
+show_banner() {
+    echo -e "${BLUE}"
+    echo "╔═══════════════════════════════════════════════╗"
+    echo "║           AppleID Auto Manager                ║"
+    echo "╚═══════════════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+# Kiểm tra quyền root
+check_root() {
+    if [ "$(id -u)" != "0" ]; then
+        echo -e "${RED}Lỗi: Script này cần được chạy với quyền root${NC}"
+        exit 1
+    fi
+}
+
+# Hiển thị menu
+show_menu() {
+    echo -e "${YELLOW}Chọn một tùy chọn:${NC}"
+    echo "1. Khởi động lại dịch vụ chính"
+    echo "2. Khởi động lại tất cả dịch vụ con"
+    echo "3. Dừng dịch vụ chính"
+    echo "4. Dừng tất cả dịch vụ con"
+    echo "5. Xem trạng thái dịch vụ chính"
+    echo "6. Liệt kê tất cả dịch vụ con"
+    echo "7. Xem log dịch vụ chính"
+    echo "8. Xem log dịch vụ con (theo ID)"
+    echo "9. Gỡ cài đặt AppleID Auto"
+    echo "0. Thoát"
+    echo -n "Nhập lựa chọn của bạn: "
+    read choice
+}
+
+# Khởi động lại dịch vụ chính
+restart_main_service() {
+    echo -e "${YELLOW}Đang khởi động lại dịch vụ chính...${NC}"
+    systemctl restart $MAIN_SERVICE
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Dịch vụ chính đã được khởi động lại thành công${NC}"
+    else
+        echo -e "${RED}Không thể khởi động lại dịch vụ chính${NC}"
+    fi
+}
+
+# Khởi động lại tất cả dịch vụ con
+restart_all_child_services() {
+    echo -e "${YELLOW}Đang khởi động lại tất cả dịch vụ con...${NC}"
+    
+    # Lấy danh sách tất cả các service con
+    services=$(systemctl list-units "${PREFIX}*.service" --no-legend | awk '{print $1}')
+    
+    if [ -z "$services" ]; then
+        echo -e "${YELLOW}Không tìm thấy dịch vụ con nào${NC}"
+        return
+    fi
+    
+    count=0
+    for service in $services; do
+        systemctl restart $service
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}Đã khởi động lại $service${NC}"
+            count=$((count+1))
+        else
+            echo -e "${RED}Không thể khởi động lại $service${NC}"
+        fi
+    done
+    
+    echo -e "${GREEN}Đã khởi động lại $count dịch vụ con${NC}"
+}
+
+# Dừng dịch vụ chính
+stop_main_service() {
+    echo -e "${YELLOW}Đang dừng dịch vụ chính...${NC}"
+    systemctl stop $MAIN_SERVICE
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Dịch vụ chính đã được dừng thành công${NC}"
+    else
+        echo -e "${RED}Không thể dừng dịch vụ chính${NC}"
+    fi
+}
+
+# Dừng tất cả dịch vụ con
+stop_all_child_services() {
+    echo -e "${YELLOW}Đang dừng tất cả dịch vụ con...${NC}"
+    
+    # Lấy danh sách tất cả các service con
+    services=$(systemctl list-units "${PREFIX}*.service" --no-legend | awk '{print $1}')
+    
+    if [ -z "$services" ]; then
+        echo -e "${YELLOW}Không tìm thấy dịch vụ con nào${NC}"
+        return
+    fi
+    
+    count=0
+    for service in $services; do
+        systemctl stop $service
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}Đã dừng $service${NC}"
+            count=$((count+1))
+        else
+            echo -e "${RED}Không thể dừng $service${NC}"
+        fi
+    done
+    
+    echo -e "${GREEN}Đã dừng $count dịch vụ con${NC}"
+}
+
+# Xem trạng thái dịch vụ chính
+view_main_service_status() {
+    echo -e "${YELLOW}Trạng thái dịch vụ chính:${NC}"
+    systemctl status $MAIN_SERVICE
+}
+
+# Liệt kê tất cả dịch vụ con
+list_all_child_services() {
+    echo -e "${YELLOW}Danh sách tất cả dịch vụ con:${NC}"
+    
+    # Lấy danh sách tất cả các service con
+    services=$(systemctl list-units "${PREFIX}*.service" --no-legend)
+    
+    if [ -z "$services" ]; then
+        echo -e "${YELLOW}Không tìm thấy dịch vụ con nào${NC}"
+        return
+    fi
+    
+    echo -e "${GREEN}ID\t\tTrạng thái\t\tTên dịch vụ${NC}"
+    echo "------------------------------------------------------"
+    
+    echo "$services" | while read -r line; do
+        service_name=$(echo "$line" | awk '{print $1}')
+        service_status=$(echo "$line" | awk '{print $3" "$4}')
+        service_id=$(echo "$service_name" | sed "s/${PREFIX}\(.*\)\.service/\1/")
+        
+        echo -e "${service_id}\t\t${service_status}\t\t${service_name}"
+    done
+}
+
+# Xem log dịch vụ chính
+view_main_service_log() {
+    echo -e "${YELLOW}Log của dịch vụ chính:${NC}"
+    journalctl -u $MAIN_SERVICE -n 50 --no-pager
+    
+    echo -e "${YELLOW}Bạn có muốn theo dõi log theo thời gian thực không? (y/n)${NC}"
+    read follow_log
+    
+    if [ "$follow_log" = "y" ]; then
+        journalctl -u $MAIN_SERVICE -f
+    fi
+}
+
+# Xem log dịch vụ con theo ID
+view_child_service_log() {
+    echo -e "${YELLOW}Nhập ID của dịch vụ con:${NC}"
+    read service_id
+    
+    service_name="${PREFIX}${service_id}.service"
+    
+    # Kiểm tra xem dịch vụ có tồn tại không
+    if ! systemctl list-units --all | grep -q "$service_name"; then
+        echo -e "${RED}Dịch vụ con với ID $service_id không tồn tại${NC}"
+        return
+    fi
+    
+    echo -e "${YELLOW}Log của dịch vụ con $service_name:${NC}"
+    journalctl -u $service_name -n 50 --no-pager
+    
+    echo -e "${YELLOW}Bạn có muốn theo dõi log theo thời gian thực không? (y/n)${NC}"
+    read follow_log
+    
+    if [ "$follow_log" = "y" ]; then
+        journalctl -u $service_name -f
+    fi
+}
+
+# Gỡ cài đặt AppleID Auto
+uninstall_appleid_auto() {
+    echo -e "${RED}CẢNH BÁO: Bạn sắp gỡ cài đặt AppleID Auto và tất cả dịch vụ liên quan.${NC}"
+    echo -e "${RED}Hành động này không thể hoàn tác. Bạn có chắc chắn muốn tiếp tục không? (y/n)${NC}"
+    read confirm
+    
+    if [ "$confirm" != "y" ]; then
+        echo -e "${YELLOW}Đã hủy gỡ cài đặt${NC}"
+        return
+    fi
+    
+    echo -e "${YELLOW}Đang gỡ cài đặt AppleID Auto...${NC}"
+    
+    # Dừng và vô hiệu hóa dịch vụ chính
+    systemctl stop $MAIN_SERVICE
+    systemctl disable $MAIN_SERVICE
+    
+    # Dừng và vô hiệu hóa tất cả dịch vụ con
+    services=$(systemctl list-units "${PREFIX}*.service" --no-legend | awk '{print $1}')
+    for service in $services; do
+        systemctl stop $service
+        systemctl disable $service
+        rm -f "/etc/systemd/system/$service"
+    done
+    
+    # Xóa file service chính
+    rm -f "/etc/systemd/system/$MAIN_SERVICE"
+    
+    # Reload systemd
+    systemctl daemon-reload
+    
+    # Lấy thư mục cài đặt
+    INSTALL_DIR=$(get_install_dir)
+    
+    echo -e "${GREEN}Đã gỡ cài đặt tất cả dịch vụ AppleID Auto${NC}"
+    
+    if [ -n "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}Thư mục cài đặt: $INSTALL_DIR${NC}"
+        echo -e "${YELLOW}Bạn có muốn xóa tất cả dữ liệu trong thư mục cài đặt không? (y/n)${NC}"
+        read delete_data
+        
+        if [ "$delete_data" = "y" ]; then
+            rm -rf "$INSTALL_DIR"
+            echo -e "${GREEN}Đã xóa tất cả dữ liệu của AppleID Auto${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Không thể xác định thư mục cài đặt.${NC}"
+    fi
+    
+    echo -e "${GREEN}Gỡ cài đặt hoàn tất${NC}"
+}
+
+# Main function
+main() {
+    check_root
+    show_banner
+    
+    while true; do
+        show_menu
+        
+        case $choice in
+            1) restart_main_service ;;
+            2) restart_all_child_services ;;
+            3) stop_main_service ;;
+            4) stop_all_child_services ;;
+            5) view_main_service_status ;;
+            6) list_all_child_services ;;
+            7) view_main_service_log ;;
+            8) view_child_service_log ;;
+            9) uninstall_appleid_auto ;;
+            0) echo -e "${GREEN}Tạm biệt!${NC}"; exit 0 ;;
+            *) echo -e "${RED}Lựa chọn không hợp lệ${NC}" ;;
+        esac
+        
+        echo
+        echo -e "${YELLOW}Nhấn Enter để tiếp tục...${NC}"
+        read
+        clear
+        show_banner
+    done
+}
+
+# Chạy chương trình
+main
