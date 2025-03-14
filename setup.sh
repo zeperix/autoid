@@ -54,10 +54,10 @@ else
   read -e api_key
   echo "Do you want to enable auto-update? (y/n)"
   read -e auto_update
-  echo "Please enter synchronization interval (unit: minutes, default 15)"
+  echo "Please enter synchronization interval (unit: minutes, default 5)"
   read -e sync_time
   if [ "$sync_time" = "" ]; then
-      sync_time=15
+      sync_time=5
   fi
   echo "Do you want to deploy Selenium Docker container? (y/n)"
   read -e run_webdriver
@@ -92,8 +92,12 @@ else
   echo "Downloading and extracting file..."
 fi
 
-wget -O abc.zip https://id.zeac.fun/auto.zip
-unzip -o auto.zip
+mkdir auto
+cd auto
+wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/main.py
+wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/api.py
+wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/lang.py
+wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/requirements.txt
 cd auto
 
 # Create systemd service for api.py
