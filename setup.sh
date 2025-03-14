@@ -138,15 +138,11 @@ if [ $language = "1" ]; then
   echo "Cài đặt hoàn tất, service đã khởi chạy"
   echo "Tên service: appleauto"
   echo "Cách sử dụng:"
-  echo "Dừng service: systemctl stop appleauto"
-  echo "Khởi động lại service: systemctl restart appleauto"
-  echo "Xem log service: journalctl -u appleauto -f"
+  echo -e "-Sử dụng lệnh sau: ${BLUE}autoid${PLAIN}"
 else
   echo "Installation completed, service started"
   echo "Service name: appleauto"
   echo "Operation method:"
-  echo "Stop: systemctl stop appleauto"
-  echo "Restart: systemctl restart appleauto"
-  echo "Check logs: journalctl -u appleauto -f"
+  echo "-Use command: ${BLUE}autoid${PLAIN}"
 fi
 exit 0
