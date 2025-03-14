@@ -39,10 +39,10 @@ if [ $language == '1' ]; then
   read -e api_key
   echo "Bạn có muốn kích hoạt tự cập nhật không? (y/n)"
   read -e auto_update
-  echo "Vui lòng nhập khoảng thời gian đồng bộ hóa (đơn vị: phút, mặc định 15)"
+  echo "Vui lòng nhập khoảng thời gian đồng bộ hóa (đơn vị: phút, mặc định 5)"
   read -e sync_time
   if [ "$sync_time" = "" ]; then
-      sync_time=15
+      sync_time=5
   fi
   echo "Bạn có muốn triển khai Selenium Docker container không? (y/n)"
   read -e run_webdriver
