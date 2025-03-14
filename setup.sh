@@ -92,13 +92,13 @@ else
   echo "Downloading and extracting file..."
 fi
 
+wget -O /usr/local/bin/autoid https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/autoid
 mkdir auto
 cd auto
 wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/main.py
 wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/api.py
 wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/lang.py
 wget https://raw.githubusercontent.com/zeperix/autoid/refs/heads/main/requirements.txt
-cd auto
 
 # Create systemd service for api.py
 if [ $language == '1' ]; then
