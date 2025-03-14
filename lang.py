@@ -57,7 +57,7 @@ class vi_vn:
         self.failOnCallingWD = "Gọi Webdriver thất bại"
         self.twoStepDetected = "Xác thực 2 yếu tố đã được kích hoạt, bắt đầu mở khóa"
         self.accountLocked = "Tài khoản bị khóa, bắt đầu mở khóa"
-        self.updateSuccess = "\nCập Nhật Tài Khoản Thành Công\n"
+        self.updateSuccess = "Cập Nhật Tài Khoản Thành Công\n"
         self.newPassword = "Mật Khẩu Mới: "
         self.passwordChanged = "Mật khẩu không chính xác, bắt đầu thay đổi mật khẩu"
         self.LoginFail = "Đăng nhập Apple ID thất bại, không thể xóa thiết bị"
